@@ -1,4 +1,4 @@
-﻿#define GLEW_DLL
+#define GLEW_DLL
 #define GLFW_DLL
 
 #include <iostream>
@@ -6,7 +6,6 @@
 #include <sstream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-
 #include "glm.hpp"
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
@@ -160,16 +159,15 @@ int main() {
     }
     glEnable(GL_DEPTH_TEST);
 
-    Model myModel("Lab_3_VAR_25.obj");
+    Model myModel("25.obj");
     std::cout << "Loaded meshes: " << myModel.meshes.size() << std::endl;
     for (size_t i = 0; i < myModel.meshes.size(); ++i)
         std::cout << "Mesh " << i << " vertices: " << myModel.meshes[i].vertices.size() << std::endl;
 
     Shader shader("vertex.glsl", "fragment.glsl");
 
-    float part1_y = 0.0f;   
-    float part2_x = 0.0f;   
-    float part3_y = 0.0f;   
+    float part2_y = 0.0f;   
+    float part3_z = 0.0f;   
 
     float lastFrame = 0.0f;
     while (!glfwWindowShouldClose(window)) {
@@ -180,15 +178,12 @@ int main() {
         processCameraInput(window, deltaTime);
 
         float speed = 2.0f * deltaTime;
-        // управление меш 0
-        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) part1_y += speed;
-        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) part1_y -= speed;
-        // управление меш 1
-        if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) part2_x += speed;
-        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) part2_x -= speed;
-        // ууправление меш 3
-        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) part3_y += speed;
-        if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) part3_y -= speed;
+        // Меш 2: Y / H
+        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) part2_y += speed;
+        if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) part2_y -= speed;
+        // Меш 3 : U / J
+        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) part3_z += speed;
+        if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) part3_z -= speed;
 
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
@@ -213,27 +208,27 @@ int main() {
         shader.setFloat("material.shininess", 32.0f);
 
         if (myModel.meshes.size() > 0) {
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, part1_y, 0.0f));
-            shader.setMat4("model", model);
+            shader.setMat4("model", glm::mat4(1.0f));
             myModel.meshes[0].Draw();
         }
 
         if (myModel.meshes.size() > 1) {
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(part2_x, 0.0f, 0.0f));
-            shader.setMat4("model", model);
+            shader.setMat4("model", glm::mat4(1.0f));
             myModel.meshes[1].Draw();
         }
-        // меш 2(индекс 2) – неподвижный
+
         if (myModel.meshes.size() > 2) {
-            shader.setMat4("model", glm::mat4(1.0f));
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, part2_y, 0.0f));
+            shader.setMat4("model", model);
             myModel.meshes[2].Draw();
         }
 
         if (myModel.meshes.size() > 3) {
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, part3_y, 0.0f));
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, part3_z));
             shader.setMat4("model", model);
             myModel.meshes[3].Draw();
         }
+
         for (size_t i = 4; i < myModel.meshes.size(); ++i) {
             shader.setMat4("model", glm::mat4(1.0f));
             myModel.meshes[i].Draw();
