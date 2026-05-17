@@ -166,8 +166,13 @@ int main() {
 
     Shader shader("vertex.glsl", "fragment.glsl");
 
-    float part2_y = 0.0f;   
-    float part3_z = 0.0f;   
+    float mesh1_x = 0.0f;      
+    float shared_z = 0.0f;     
+    float mesh2_y = 0.0f;    
+
+    const float MIN_X = -0.7f, MAX_X = 0.7f;
+    const float MIN_Z = -0.37f, MAX_Z = 0.3f;
+    const float MIN_Y = -0.7f, MAX_Y = 0.03f;
 
     float lastFrame = 0.0f;
     while (!glfwWindowShouldClose(window)) {
@@ -178,12 +183,21 @@ int main() {
         processCameraInput(window, deltaTime);
 
         float speed = 2.0f * deltaTime;
-        // Меш 2: Y / H
-        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) part2_y += speed;
-        if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) part2_y -= speed;
-        // Меш 3 : U / J
-        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) part3_z += speed;
-        if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) part3_z -= speed;
+        // меш 1 отдельно R /F
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) mesh1_x += speed;
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) mesh1_x -= speed;
+        if (mesh1_x > MAX_X) mesh1_x = MAX_X;
+        if (mesh1_x < MIN_X) mesh1_x = MIN_X;
+        // общее движение меш 1 и меш 3 U / J
+        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) shared_z += speed;
+        if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) shared_z -= speed;
+        if (shared_z > MAX_Z) shared_z = MAX_Z;
+        if (shared_z < MIN_Z) shared_z = MIN_Z;
+        // меш 2 по Y / H
+        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) mesh2_y += speed;
+        if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) mesh2_y -= speed;
+        if (mesh2_y > MAX_Y) mesh2_y = MAX_Y;
+        if (mesh2_y < MIN_Y) mesh2_y = MIN_Y;
 
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
@@ -207,27 +221,29 @@ int main() {
         shader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
         shader.setFloat("material.shininess", 32.0f);
 
-        if (myModel.meshes.size() > 0) {
-            shader.setMat4("model", glm::mat4(1.0f));
-            myModel.meshes[0].Draw();
-        }
+         if (myModel.meshes.size() > 0) {
+             shader.setMat4("model", glm::mat4(1.0f));
+             myModel.meshes[0].Draw();
+         }
 
-        if (myModel.meshes.size() > 1) {
-            shader.setMat4("model", glm::mat4(1.0f));
-            myModel.meshes[1].Draw();
-        }
+         if (myModel.meshes.size() > 1) {
+             glm::mat4 model = glm::mat4(1.0f);
+             model = glm::translate(model, glm::vec3(mesh1_x, 0.0f, shared_z));
+             shader.setMat4("model", model);
+             myModel.meshes[1].Draw();
+         }
 
-        if (myModel.meshes.size() > 2) {
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, part2_y, 0.0f));
-            shader.setMat4("model", model);
-            myModel.meshes[2].Draw();
-        }
+         if (myModel.meshes.size() > 2) {
+             glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, mesh2_y, 0.0f));
+             shader.setMat4("model", model);
+             myModel.meshes[2].Draw();
+         }
 
-        if (myModel.meshes.size() > 3) {
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, part3_z));
-            shader.setMat4("model", model);
-            myModel.meshes[3].Draw();
-        }
+         if (myModel.meshes.size() > 3) {
+             glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, shared_z));
+             shader.setMat4("model", model);
+             myModel.meshes[3].Draw();
+         }
 
         for (size_t i = 4; i < myModel.meshes.size(); ++i) {
             shader.setMat4("model", glm::mat4(1.0f));
